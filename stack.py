@@ -8,13 +8,12 @@ import argparse
 
 from utils import resize_image, draw_matches
 
-def simple_stack_images_ECC(base_image_path, image_list, draw_matches=False):
+def simple_stack_images_ECC(base_image_path, image_list, scale_percent, draw_matches=False):
 	M = np.eye(3, 3, dtype=np.float32)
 
 	base_image = cv.imread(base_image_path, 1).astype(np.float32) / 255
 
 	print('Original Dimensions : ', base_image.shape)
-	scale_percent = 100 # percent of original size
 	width = int(base_image.shape[1] * scale_percent / 100)
 	height = int(base_image.shape[0] * scale_percent / 100)
 	dim = (width, height)
@@ -46,12 +45,11 @@ def simple_stack_images_ECC(base_image_path, image_list, draw_matches=False):
 	return resized_stacked_image
 
 
-def simple_stack_images_orb(base_image_path, image_list, draw_matches=False):
+def simple_stack_images_orb(base_image_path, image_list, scale_percent, draw_matches=False):
 	orb = cv.ORB_create()
 
 	base_image = cv.imread(base_image_path, 1)
 
-	scale_percent = 200 # percent of original size
 	width = int(base_image.shape[1] * scale_percent / 100)
 	height = int(base_image.shape[0] * scale_percent / 100)
 	dim = (width, height)
@@ -67,7 +65,7 @@ def simple_stack_images_orb(base_image_path, image_list, draw_matches=False):
 	base_image_edges_keypoints, base_image_edges_des = orb.detectAndCompute(base_image_edges, None)
 
 
-	for image_path in image_list:
+	for image_path in tqdm(image_list):
 		image = cv.imread(image_path, 1)
 		image_edges = cv.Canny(image, 50, 150)
 		keypoints, des = orb.detectAndCompute(image_edges, None)
@@ -103,7 +101,8 @@ def main(args):
 	if method == "simple_stack_images_ecc":
 		stacked_image = simple_stack_images_ECC(
 			file_list[0], 
-			file_list[1:], 
+			file_list[1:],
+			args.scale_percent,
 			args.draw_matches
 		)
 		cv.imwrite("stacked_image_ecc.jpg", stacked_image)
@@ -112,6 +111,7 @@ def main(args):
 		stacked_image = simple_stack_images_orb(
 			file_list[0], 
 			file_list[1:], 
+			args.scale_percent,
 			args.draw_matches
 		)
 		cv.imwrite("stacked_image_orb.jpg", stacked_image)
@@ -122,8 +122,9 @@ def main(args):
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
-	parser.add_argument("--method", type=str, default="simple_stack_images_ecc")
+	parser.add_argument("--method", type=str, default="simple_stack_images_orb")
 	parser.add_argument("--directory", type=str, default="./images/noisy_images")
+	parser.add_argument("--scale-percent", type=int, default=200)
 	parser.add_argument("--draw-matches", type=bool, default=False)
 	args = parser.parse_args()
 	main(args)
