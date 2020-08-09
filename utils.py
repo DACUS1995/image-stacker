@@ -1,6 +1,5 @@
 import cv2 as cv
 import numpy as np
-from numba import jit
 
 
 def resize_image(image, scale_percent, interpolation=cv.INTER_AREA) -> np.ndarray:
@@ -11,7 +10,7 @@ def resize_image(image, scale_percent, interpolation=cv.INTER_AREA) -> np.ndarra
 	return image
 
 
-def draw_matches(base_image, second_image, method="akaze" ,display=False):
+def draw_matches(base_image, second_image, method="akaze", display=True):
 	kp1, des1 = None, None
 	kp2, des2 = None, None
 
@@ -19,6 +18,8 @@ def draw_matches(base_image, second_image, method="akaze" ,display=False):
 		detector = cv.AKAZE_create()
 	elif method == "orb":
 		detector = cv.ORB_create()
+	else:
+		raise Exception("Unhandled method.")
 
 	kp1, des1 = detector.detectAndCompute(base_image, None)
 	kp2, des2 = detector.detectAndCompute(second_image, None)
@@ -42,7 +43,7 @@ def draw_matches(base_image, second_image, method="akaze" ,display=False):
 	)
 
 	if display:
-		cv.imshow("Display window", image)
+		cv.imshow("Display window", image_combined)
 		cv.waitKey(0)
 
 
